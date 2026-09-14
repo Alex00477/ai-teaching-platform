@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     ph8_api_key: str = ""
     file_storage_root: str = "./var/files"
     worker_poll_interval_seconds: float = 2.0
+    session_ttl_seconds: int = 8 * 60 * 60
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -42,4 +43,3 @@ def validate_worker_settings(settings: Settings) -> None:
             "PH8_API_KEY is required for the worker and must be provided only in the "
             "server environment."
         )
-
