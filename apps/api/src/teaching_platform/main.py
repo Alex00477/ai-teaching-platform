@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from .auth import router as auth_router
+from .classes import router as classes_router
 from .config import get_settings, validate_api_settings
 
 
@@ -19,6 +20,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.include_router(auth_router)
+app.include_router(classes_router)
 
 
 @app.get("/healthz", tags=["system"])

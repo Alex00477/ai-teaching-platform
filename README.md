@@ -29,4 +29,4 @@
 4. 启动 Worker（仅验证配置）：`python -m teaching_platform.worker --once`
 5. 在 `apps/web` 安装并启动前端：`npm install && npm run dev`
 
-当前 API 提供健康检查和 `/auth` 认证入口；Worker 只完成配置校验和轮询占位，班级、作业、批改和讲义业务迁移将在后续步骤实现。
+当前 API 提供健康检查、`/auth` 认证入口和 `/classes` 班级入口；Worker 只完成配置校验和轮询占位，作业、批改和讲义业务迁移将在后续步骤实现。
