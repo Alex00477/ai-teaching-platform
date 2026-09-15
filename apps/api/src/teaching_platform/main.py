@@ -7,6 +7,7 @@ from .assignments import router as assignments_router
 from .auth import router as auth_router
 from .classes import router as classes_router
 from .config import get_settings, validate_api_settings
+from .submissions import router as submissions_router
 
 
 @asynccontextmanager
@@ -23,6 +24,7 @@ app = FastAPI(
 app.include_router(auth_router)
 app.include_router(classes_router)
 app.include_router(assignments_router)
+app.include_router(submissions_router)
 
 
 @app.get("/healthz", tags=["system"])

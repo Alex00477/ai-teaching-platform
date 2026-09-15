@@ -155,6 +155,43 @@ class AssignmentQuestion(Base):
     rubric: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
+class AnswerDraft(Base):
+    __tablename__ = "answer_drafts"
+    __table_args__ = (
+        UniqueConstraint("student_id", "assignment_id", name="uq_answer_draft_student_assignment"),
+        CheckConstraint("assignment_version > 0", name="ck_answer_draft_version_positive"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    student_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    assignment_id: Mapped[str] = mapped_column(ForeignKey("assignments.id", ondelete="CASCADE"), index=True)
+    assignment_version: Mapped[int] = mapped_column(Integer)
+    answers: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class Submission(Base):
+    __tablename__ = "submissions"
+    __table_args__ = (
+        UniqueConstraint("student_id", "assignment_id", name="uq_submission_student_assignment"),
+        CheckConstraint("assignment_version > 0", name="ck_submission_version_positive"),
+        CheckConstraint(
+            "status IN ('submitted', 'grading', 'pending_review', 'graded', 'failed')",
+            name="ck_submission_status",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    student_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    assignment_id: Mapped[str] = mapped_column(ForeignKey("assignments.id", ondelete="CASCADE"), index=True)
+    assignment_version: Mapped[int] = mapped_column(Integer)
+    answers: Mapped[dict] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(16), default="submitted", index=True)
+    submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 Index("ix_class_join_codes_active", ClassJoinCode.class_id, ClassJoinCode.expires_at)
 Index(
     "uq_active_class_membership_student",
