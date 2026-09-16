@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     ph8_base_url: str = "https://ph8.co/v1"
     ph8_model: str = "deepseek-v4-flash"
     ph8_api_key: str = ""
+    ph8_timeout_seconds: float = 30.0
+    worker_max_attempts: int = 2
     file_storage_root: str = "./var/files"
     worker_poll_interval_seconds: float = 2.0
     session_ttl_seconds: int = 8 * 60 * 60

@@ -1,14 +1,29 @@
 import argparse
 import time
 
+from .ai_tasks import claim_next_task, process_task
 from .config import get_settings, validate_worker_settings
+from .db import get_session_factory
+from .ph8 import PH8Client
 
 
 def run_once() -> None:
     settings = get_settings()
     validate_worker_settings(settings)
-    # Task polling is intentionally a placeholder until the database model exists.
-    print(f"worker ready; poll_interval_seconds={settings.worker_poll_interval_seconds:g}")
+    db = get_session_factory()()
+    try:
+        task = claim_next_task(db)
+        if not task:
+            print("worker idle; no pending tasks")
+            return
+        client = PH8Client(settings)
+        try:
+            process_task(db, task, client=client, settings=settings)
+        finally:
+            client.close()
+        print(f"worker processed task={task.id} status={task.status}")
+    finally:
+        db.close()
 
 
 def run_forever() -> None:
@@ -16,7 +31,7 @@ def run_forever() -> None:
     validate_worker_settings(settings)
     print(f"worker started; poll_interval_seconds={settings.worker_poll_interval_seconds:g}")
     while True:
-        # The persistent task table and claim transaction are added in the next step.
+        run_once()
         time.sleep(settings.worker_poll_interval_seconds)
 
 
@@ -32,4 +47,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

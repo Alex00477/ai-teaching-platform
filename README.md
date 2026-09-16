@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-当前已建立可运行的前后端工程骨架，并完成认证、班级、作业发布和学生提交基础模块；批改和讲义业务仍按步骤实现。原始需求保留在 [需求规约.md](需求规约.md)，已确认的产品和工程取舍保留在 [decisions/](decisions/)。
+当前已建立可运行的前后端工程骨架，并完成认证、班级、作业发布、学生提交、人工批改和异步 AI 批改基础模块；讲义和错题讲解仍按步骤实现。原始需求保留在 [需求规约.md](需求规约.md)，已确认的产品和工程取舍保留在 [decisions/](decisions/)。
 
 ## 文档索引
 
@@ -26,7 +26,7 @@
 1. `docker compose up -d postgres redis`
 2. 在 `apps/api` 安装 Python 依赖：`pip install -e ".[dev]"`
 3. 启动 API：`uvicorn teaching_platform.main:app --app-dir src --reload`
-4. 启动 Worker（仅验证配置）：`python -m teaching_platform.worker --once`
+4. 启动 Worker：开发时可用 `python -m teaching_platform.worker --once` 处理一条任务；持续运行使用 `python -m teaching_platform.worker`
 5. 在 `apps/web` 安装并启动前端：`npm install && npm run dev`
 
-当前 API 提供健康检查、`/auth` 认证入口、`/classes` 班级入口和 `/assignments` 作业、草稿、提交与提交查询入口；Worker 只完成配置校验和轮询占位，批改和讲义业务迁移将在后续步骤实现。
+当前 API 提供健康检查、`/auth` 认证入口、`/classes` 班级入口、`/assignments` 作业/草稿/提交入口，以及人工批改、AI 任务和学生反馈入口；Worker 会领取持久化 AI 任务并调用 PH8，讲义业务迁移将在后续步骤实现。

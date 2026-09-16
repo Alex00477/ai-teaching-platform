@@ -192,6 +192,78 @@ class Submission(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class GradingRecord(Base):
+    __tablename__ = "grading_records"
+    __table_args__ = (
+        UniqueConstraint("submission_id", name="uq_grading_record_submission"),
+        CheckConstraint("assignment_version > 0", name="ck_grading_record_version_positive"),
+        CheckConstraint("status IN ('draft', 'confirmed')", name="ck_grading_record_status"),
+        CheckConstraint("total_score >= 0", name="ck_grading_record_total_nonnegative"),
+        CheckConstraint("max_score > 0", name="ck_grading_record_max_positive"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    submission_id: Mapped[str] = mapped_column(ForeignKey("submissions.id", ondelete="CASCADE"), index=True)
+    teacher_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    assignment_version: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(16), default="draft", index=True)
+    total_score: Mapped[int] = mapped_column(Integer, default=0)
+    max_score: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class GradingItem(Base):
+    __tablename__ = "grading_items"
+    __table_args__ = (
+        UniqueConstraint("grading_record_id", "question_id", name="uq_grading_item_record_question"),
+        CheckConstraint("score >= 0", name="ck_grading_item_score_nonnegative"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    grading_record_id: Mapped[str] = mapped_column(ForeignKey("grading_records.id", ondelete="CASCADE"), index=True)
+    question_id: Mapped[str] = mapped_column(ForeignKey("assignment_questions.id", ondelete="CASCADE"), index=True)
+    score: Mapped[int] = mapped_column(Integer, default=0)
+    feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class AITask(Base):
+    __tablename__ = "ai_grade_tasks"
+    __table_args__ = (
+        CheckConstraint("assignment_version > 0", name="ck_ai_grade_task_version_positive"),
+        CheckConstraint(
+            "status IN ('pending', 'processing', 'pending_review', 'confirmed', 'failed')",
+            name="ck_ai_grade_task_status",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    submission_id: Mapped[str] = mapped_column(ForeignKey("submissions.id", ondelete="CASCADE"), index=True)
+    teacher_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    assignment_version: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(16), default="pending", index=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+Index(
+    "uq_ai_grade_task_running_submission",
+    AITask.submission_id,
+    unique=True,
+    postgresql_where=AITask.status.in_(("pending", "processing", "pending_review")),
+    sqlite_where=AITask.status.in_(("pending", "processing", "pending_review")),
+)
+
+
 Index("ix_class_join_codes_active", ClassJoinCode.class_id, ClassJoinCode.expires_at)
 Index(
     "uq_active_class_membership_student",

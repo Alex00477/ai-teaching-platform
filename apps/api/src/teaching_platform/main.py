@@ -3,10 +3,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from .ai_grading import router as ai_grading_router
 from .assignments import router as assignments_router
 from .auth import router as auth_router
 from .classes import router as classes_router
 from .config import get_settings, validate_api_settings
+from .grading import router as grading_router
 from .submissions import router as submissions_router
 
 
@@ -25,6 +27,8 @@ app.include_router(auth_router)
 app.include_router(classes_router)
 app.include_router(assignments_router)
 app.include_router(submissions_router)
+app.include_router(grading_router)
+app.include_router(ai_grading_router)
 
 
 @app.get("/healthz", tags=["system"])
